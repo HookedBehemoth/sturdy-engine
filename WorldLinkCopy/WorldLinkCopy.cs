@@ -5,7 +5,7 @@ using MelonLoader;
 using UnityEngine;
 using VRC.UI;
 
-[assembly: MelonInfo(typeof(WorldLinkCopy), nameof(WorldLinkCopy), "1.0.0", "Behemoth")]
+[assembly: MelonInfo(typeof(WorldLinkCopy), nameof(WorldLinkCopy), "1.0.1", "Behemoth")]
 [assembly: MelonGame("VRChat", "VRChat")]
 
 public class WorldLinkCopy : MelonMod {
