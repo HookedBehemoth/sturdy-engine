@@ -28,7 +28,7 @@ public class WorldLinkCopy : MelonMod {
         var report_button = world_node.transform.Find("ReportButton");
         var copy_button = GameObject.Instantiate(report_button, world_node.transform);
         copy_button.name = "CopyLinkButton";
-        copy_button.localPosition = new Vector3(570f, -185f);
+        copy_button.localPosition = new Vector3(548f, -185f);
         copy_button.GetChild(0).GetComponent<Text>().text = "Copy Link";
         var on_click = new Button.ButtonClickedEvent();
         on_click.AddListener(new Action(CopyWorldLinkToClipboard));
@@ -37,7 +37,8 @@ public class WorldLinkCopy : MelonMod {
     }
 
     private static void CopyWorldLinkToClipboard() {
+        var instance = info_page.field_Public_ApiWorldInstance_0;
         var world = info_page.field_Private_ApiWorld_0;
-        GUIUtility.systemCopyBuffer = $"https://vrchat.com/home/launch?worldId={world.id}&instanceId={world.instanceId}";
+        GUIUtility.systemCopyBuffer = $"https://vrchat.com/home/launch?worldId={world.id}&instanceId={instance.instanceId}";
     }
 }
