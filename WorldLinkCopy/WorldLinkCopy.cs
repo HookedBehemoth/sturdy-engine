@@ -1,19 +1,37 @@
-﻿using System;
+﻿/*
+ * Copyright (c) 2021 HookedBehemoth
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 3, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 using MelonLoader;
-using UnityEngine;
-using VRC.UI;
 
 [assembly: MelonInfo(typeof(WorldLinkCopy), nameof(WorldLinkCopy), "1.0.1", "Behemoth")]
 [assembly: MelonGame("VRChat", "VRChat")]
 
 public class WorldLinkCopy : MelonMod {
+    private static MelonPreferences_Entry<bool> UseShortLink;
+
     public override void OnApplicationStart() {
         MelonCoroutines.Start(AttachButton());
-    }
 
-    private static PageWorldInfo info_page = null;
+        MelonPreferences.CreateCategory(nameof(WorldLinkCopy));
+        UseShortLink = MelonPreferences.CreateEntry<bool>(nameof(UseShortLink), nameof(UseShortLink), true);
+    }
 
     private static IEnumerator AttachButton() {
         GameObject world_node = null;
@@ -21,9 +39,6 @@ public class WorldLinkCopy : MelonMod {
             yield return new WaitForSeconds(1f);
             world_node = GameObject.Find("UserInterface/MenuContent/Screens/WorldInfo");
         } while (world_node == null);
-
-        info_page = world_node.GetComponent<PageWorldInfo>();
-        var api_world = info_page.field_Private_ApiWorld_0;
 
         var report_button = world_node.transform.Find("ReportButton");
         var copy_button = GameObject.Instantiate(report_button, world_node.transform);
@@ -37,8 +52,27 @@ public class WorldLinkCopy : MelonMod {
     }
 
     private static void CopyWorldLinkToClipboard() {
-        var instance = info_page.field_Public_ApiWorldInstance_0;
-        var world = info_page.field_Private_ApiWorld_0;
-        GUIUtility.systemCopyBuffer = $"https://vrchat.com/home/launch?worldId={world.id}&instanceId={instance.instanceId}";
+        if (UseShortLink.Value) {
+            CopyShortLink();
+        } else {
+            CopyFullLink();
+        }
+    }
+
+    private static void CopyShortLink() {
+        void CopyShortLinkInternal(string shortName) => GUIUtility.systemCopyBuffer = $"https://vrch.at/{shortName}";
+        void OnError(string error) { MelonLogger.Error($"Failed to receive short link: {error}"); CopyFullLink(); }
+
+        var instance = RoomManager.field_Internal_Static_ApiWorldInstance_0;
+        if (instance.shortName != null) {
+            CopyShortLinkInternal(instance.shortName);
+        } else {
+            instance.GetShortName(new Action<string>(CopyShortLinkInternal), new Action<string>(OnError));
+        }
+    }
+
+    private static void CopyFullLink() {
+        var instance = RoomManager.field_Internal_Static_ApiWorldInstance_0;
+        GUIUtility.systemCopyBuffer = $"https://vrchat.com/home/launch?worldId={instance.worldId}&instanceId={instance.instanceId}";
     }
 }
